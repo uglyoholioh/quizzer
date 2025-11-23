@@ -5,16 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Generator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="app-wrapper">
         <header>
-            <h1><span class="icon">⚡</span>DevQuiz</h1>
+            <div class="header-content">
+                <h1><span class="icon">⚡</span>DevQuiz</h1>
+                <nav>
+                    <button id="nav-home" class="nav-link active">Home</button>
+                    <button id="nav-history" class="nav-link">History</button>
+                    <button id="nav-settings" class="nav-link">Settings</button>
+                </nav>
+            </div>
         </header>
 
         <main class="container">
+            <!-- History Section -->
+            <div id="history-section" class="card fade-in hidden">
+                <div class="history-header">
+                    <h2>Session History</h2>
+                    <button id="clear-history-btn" class="text-btn">Clear</button>
+                </div>
+                <div id="history-list" class="history-list">
+                    <!-- History items will be injected here -->
+                    <p class="empty-state">No quizzes taken yet.</p>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="card fade-in hidden">
+                <h2>Settings</h2>
+                <div class="settings-form">
+                    <div class="setting-item">
+                        <label for="timer-input">Timer Duration (seconds)</label>
+                        <input type="number" id="timer-input" value="60" min="10" max="300">
+                    </div>
+                    <div class="setting-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="shuffle-questions">
+                            Shuffle Questions
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="shuffle-options">
+                            Shuffle Options
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                         <label class="checkbox-label">
+                            <input type="checkbox" id="light-mode-toggle">
+                            Light Mode
+                        </label>
+                    </div>
+                    <button id="save-settings-btn" class="primary-btn">Save & Return</button>
+                </div>
+            </div>
+
             <div id="upload-section" class="card fade-in">
                 <div class="upload-content">
                     <h2>Upload Quiz Data</h2>
@@ -27,6 +76,28 @@
                         <span id="file-name">No file chosen</span>
                     </div>
                     <button id="upload-btn" class="primary-btn">Start Quiz</button>
+                    <div class="or-divider">OR</div>
+                    <div class="button-group">
+                        <button id="sample-btn" class="secondary-btn">Try Sample Quiz</button>
+                        <button id="paste-btn" class="secondary-btn">Paste JSON</button>
+                    </div>
+
+                    <div id="paste-section" class="hidden fade-in">
+                        <textarea id="json-paste-area" placeholder="Paste your JSON quiz data here..." rows="6" class="text-input"></textarea>
+                        <button id="load-paste-btn" class="primary-btn">Load JSON</button>
+                    </div>
+
+                    <div class="ai-gen-section">
+                        <div class="or-divider"><span>OR GENERATE WITH AI</span></div>
+                        <div class="ai-input-group">
+                            <input type="text" id="ai-prompt" placeholder="Enter topic (e.g. Python Decorators)" class="text-input">
+                            <button id="ai-generate-btn" class="special-btn">✨ Generate</button>
+                        </div>
+                        <div class="api-key-wrapper">
+                            <input type="password" id="api-key-input" class="text-input" placeholder="Gemini API Key (Optional if server configured)">
+                        </div>
+                    </div>
+
                     <div id="error-message" class="error"></div>
                 </div>
             </div>
@@ -37,6 +108,7 @@
                 </div>
                 <div class="stats-bar">
                     <span>Question <span id="current-question-num">1</span>/<span id="total-questions-count"></span></span>
+                    <span id="timer">Time: <span id="time-left">60</span>s</span>
                     <span>Score: <span id="current-score">0</span></span>
                 </div>
 
