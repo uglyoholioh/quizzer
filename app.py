@@ -162,6 +162,29 @@ def generate_quiz():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/parse-json', methods=['POST'])
+def parse_json():
+    data = request.json
+    json_content = data.get('json_content')
+
+    if not json_content:
+        return jsonify({'error': 'No JSON content provided'}), 400
+
+    try:
+        # Handle case where user might paste just the array or object
+        try:
+            parsed_data = json.loads(json_content)
+        except json.JSONDecodeError:
+             return jsonify({'error': 'Invalid JSON format'}), 400
+
+        error = validate_quiz_data(parsed_data)
+        if error:
+            return jsonify({'error': error}), 400
+
+        return jsonify({'quiz_data': parsed_data}), 200
+    except Exception as e:
+         return jsonify({'error': f"Server error: {str(e)}"}), 500
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:

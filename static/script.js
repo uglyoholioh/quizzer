@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const uploadBtn = document.getElementById('upload-btn');
     const sampleBtn = document.getElementById('sample-btn');
+    const pasteBtn = document.getElementById('paste-btn');
+    const pasteSection = document.getElementById('paste-section');
+    const jsonPasteArea = document.getElementById('json-paste-area');
+    const loadPasteBtn = document.getElementById('load-paste-btn');
     const fileInput = document.getElementById('file-input');
     const uploadSection = document.getElementById('upload-section');
     const quizSection = document.getElementById('quiz-section');
@@ -237,6 +241,50 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadBtn.textContent = "Start Quiz";
             uploadBtn.disabled = false;
             errorMessage.textContent = "An error occurred while uploading the file.";
+        });
+    });
+
+    pasteBtn.addEventListener('click', () => {
+        pasteSection.classList.toggle('hidden');
+        if (!pasteSection.classList.contains('hidden')) {
+            jsonPasteArea.focus();
+        }
+    });
+
+    loadPasteBtn.addEventListener('click', () => {
+        const jsonText = jsonPasteArea.value.trim();
+        if (!jsonText) {
+            errorMessage.textContent = "Please paste some JSON text.";
+            return;
+        }
+
+        loadPasteBtn.textContent = "Validating...";
+        loadPasteBtn.disabled = true;
+
+        fetch('/parse-json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ json_content: jsonText })
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadPasteBtn.textContent = "Load JSON";
+            loadPasteBtn.disabled = false;
+
+            if (data.error) {
+                errorMessage.textContent = data.error;
+            } else {
+                currentQuestions = data.quiz_data;
+                currentQuizName = "Pasted JSON Quiz";
+                fileNameSpan.textContent = currentQuizName;
+                startQuiz();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadPasteBtn.textContent = "Load JSON";
+            loadPasteBtn.disabled = false;
+            errorMessage.textContent = "Invalid JSON format or server error.";
         });
     });
 

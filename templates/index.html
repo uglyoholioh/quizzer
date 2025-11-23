@@ -77,7 +77,15 @@
                     </div>
                     <button id="upload-btn" class="primary-btn">Start Quiz</button>
                     <div class="or-divider">OR</div>
-                    <button id="sample-btn" class="secondary-btn">Try Sample Quiz</button>
+                    <div class="button-group">
+                        <button id="sample-btn" class="secondary-btn">Try Sample Quiz</button>
+                        <button id="paste-btn" class="secondary-btn">Paste JSON</button>
+                    </div>
+
+                    <div id="paste-section" class="hidden fade-in">
+                        <textarea id="json-paste-area" placeholder="Paste your JSON quiz data here..." rows="6" class="text-input"></textarea>
+                        <button id="load-paste-btn" class="primary-btn">Load JSON</button>
+                    </div>
 
                     <div class="ai-gen-section">
                         <div class="or-divider"><span>OR GENERATE WITH AI</span></div>
