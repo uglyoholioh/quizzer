@@ -85,7 +85,7 @@ def generate_quiz():
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
 
         system_prompt = """
         You are a quiz generator. Generate a quiz based on the user's prompt.
