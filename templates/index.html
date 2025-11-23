@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header>
+            <h1><span class="icon">⚡</span>DevQuiz</h1>
+        </header>
+
+        <main class="container">
+            <div id="upload-section" class="card fade-in">
+                <div class="upload-content">
+                    <h2>Upload Quiz Data</h2>
+                    <p>Select a JSON file to start your practice session.</p>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="file-input" accept=".json" class="file-input">
+                        <label for="file-input" class="file-label">
+                            Choose File
+                        </label>
+                        <span id="file-name">No file chosen</span>
+                    </div>
+                    <button id="upload-btn" class="primary-btn">Start Quiz</button>
+                    <div id="error-message" class="error"></div>
+                </div>
+            </div>
+
+            <div id="quiz-section" class="hidden">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <div class="stats-bar">
+                    <span>Question <span id="current-question-num">1</span>/<span id="total-questions-count"></span></span>
+                    <span>Score: <span id="current-score">0</span></span>
+                </div>
+
+                <div id="question-container" class="card">
+                    <h2 id="question-text"></h2>
+                    <div id="options-container"></div>
+                </div>
+
+                <div id="feedback" class="card feedback-card hidden">
+                    <div class="feedback-header">
+                        <span id="feedback-icon"></span>
+                        <h3 id="feedback-text"></h3>
+                    </div>
+                    <div class="explanation-content">
+                        <strong>Explanation:</strong>
+                        <div id="explanation-text"></div>
+                    </div>
+                    <button id="next-btn" class="primary-btn">Next Question ➝</button>
+                </div>
+            </div>
+
+            <div id="results-section" class="card hidden fade-in">
+                <h2>Session Complete!</h2>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <span id="score"></span>
+                        <span class="divider">/</span>
+                        <span id="total-questions"></span>
+                    </div>
+                </div>
+                <p id="score-message"></p>
+                <button id="restart-btn" class="secondary-btn">Start New Session</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

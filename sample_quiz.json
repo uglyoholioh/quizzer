@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "question": "What is the capital of France?",
+    "options": ["London", "Berlin", "Paris", "Madrid"],
+    "answer": "Paris",
+    "explanation": "Paris is the capital and most populous city of France."
+  },
+  {
+    "id": 2,
+    "question": "What is the output of the following Python code?\n\n```python\nprint(2 + 2)\n```",
+    "options": ["3", "4", "22", "Error"],
+    "answer": "4",
+    "explanation": "The code `print(2 + 2)` calculates the sum of 2 and 2, which is 4."
+  },
+  {
+    "id": 3,
+    "question": "Which function is used to define a function in Python?",
+    "options": ["func", "def", "function", "define"],
+    "answer": "def",
+    "explanation": "The `def` keyword is used to define functions in Python. Example:\n```python\ndef my_func():\n    pass\n```"
+  }
+]
