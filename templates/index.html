@@ -78,6 +78,18 @@
                     <button id="upload-btn" class="primary-btn">Start Quiz</button>
                     <div class="or-divider">OR</div>
                     <button id="sample-btn" class="secondary-btn">Try Sample Quiz</button>
+
+                    <div class="ai-gen-section">
+                        <div class="or-divider"><span>OR GENERATE WITH AI</span></div>
+                        <div class="ai-input-group">
+                            <input type="text" id="ai-prompt" placeholder="Enter topic (e.g. Python Decorators)" class="text-input">
+                            <button id="ai-generate-btn" class="special-btn">✨ Generate</button>
+                        </div>
+                        <div class="api-key-wrapper">
+                            <input type="password" id="api-key-input" class="text-input" placeholder="Gemini API Key (Optional if server configured)">
+                        </div>
+                    </div>
+
                     <div id="error-message" class="error"></div>
                 </div>
             </div>

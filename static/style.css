@@ -599,3 +599,154 @@ code {
     color: var(--text-muted);
     font-style: italic;
 }
+
+/* AI Generation Section */
+.ai-gen-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+}
+
+.ai-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.text-input {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    font-size: 1rem;
+    font-family: var(--font-body);
+}
+
+.text-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.special-btn {
+    background: linear-gradient(135deg, #c084fc, #818cf8);
+    color: white;
+    padding: 0 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+
+.special-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(192, 132, 252, 0.4);
+}
+
+.api-key-wrapper {
+    margin-top: 1rem;
+}
+
+/* Matching Quiz Mode */
+.matching-container {
+    display: flex;
+    gap: 2rem;
+    justify-content: space-between;
+}
+
+.match-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.match-item {
+    padding: 1rem;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.match-item:hover {
+    border-color: var(--primary-color);
+}
+
+.match-item.selected {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+.match-item.matched {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+    cursor: default;
+    opacity: 0.7;
+}
+
+/* Open Ended Quiz Mode */
+.open-ended-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.open-ended-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.check-answer-btn {
+    align-self: flex-start;
+}
+
+.self-correct-wrapper {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--secondary-color);
+}
+
+.self-correct-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.correct-btn {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.incorrect-btn {
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}

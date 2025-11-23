@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackText = document.getElementById('feedback-text');
     const explanationText = document.getElementById('explanation-text');
     const nextBtn = document.getElementById('next-btn');
+    const feedbackIcon = document.getElementById('feedback-icon');
 
     const resultsSection = document.getElementById('results-section');
     const questionContainer = document.getElementById('question-container');
@@ -32,6 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const shuffleQuestionsCheckbox = document.getElementById('shuffle-questions');
     const shuffleOptionsCheckbox = document.getElementById('shuffle-options');
     const lightModeToggle = document.getElementById('light-mode-toggle');
+
+    // AI Generation Elements
+    const aiPromptInput = document.getElementById('ai-prompt');
+    const aiGenerateBtn = document.getElementById('ai-generate-btn');
+    const apiKeyInput = document.getElementById('api-key-input');
 
     // New UI Elements
     const progressBar = document.getElementById('progress-bar');
@@ -62,6 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
         applySettingsToUI();
     }
 
+    // Load API Key
+    const storedApiKey = localStorage.getItem('geminiApiKey');
+    if (storedApiKey) {
+        apiKeyInput.value = storedApiKey;
+    }
+
+    apiKeyInput.addEventListener('change', () => {
+        localStorage.setItem('geminiApiKey', apiKeyInput.value);
+    });
+
     function applySettingsToUI() {
         timerInput.value = quizSettings.timeLimit;
         shuffleQuestionsCheckbox.checked = quizSettings.shuffleQuestions;
@@ -84,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById(sectionId).classList.remove('hidden');
 
-        // Update active nav link
         navHome.classList.remove('active');
         navHistory.classList.remove('active');
         navSettings.classList.remove('active');
@@ -102,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (quizSection.classList.contains('hidden')) {
              switchSection('upload-section');
         } else {
-             // If quiz is active, maybe warn? For now just go to upload/home
              if(confirm("Quit current quiz?")) {
                  clearInterval(timerInterval);
                  switchSection('upload-section');
@@ -117,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     navSettings.addEventListener('click', () => {
-        clearInterval(timerInterval); // Pause/Stop timer when leaving quiz
+        clearInterval(timerInterval);
         switchSection('settings-section');
     });
 
@@ -137,7 +151,48 @@ document.addEventListener('DOMContentLoaded', () => {
         switchSection('upload-section');
     });
 
-    // File input change handler
+
+    // AI Generator Handler
+    aiGenerateBtn.addEventListener('click', () => {
+        const prompt = aiPromptInput.value.trim();
+        const apiKey = apiKeyInput.value.trim();
+
+        if (!prompt) {
+            errorMessage.textContent = "Please enter a topic.";
+            return;
+        }
+
+        aiGenerateBtn.textContent = "Generating...";
+        aiGenerateBtn.disabled = true;
+        errorMessage.textContent = "";
+
+        fetch('/generate-quiz', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: prompt, apiKey: apiKey })
+        })
+        .then(response => response.json())
+        .then(data => {
+            aiGenerateBtn.textContent = "✨ Generate";
+            aiGenerateBtn.disabled = false;
+
+            if (data.error) {
+                errorMessage.textContent = data.error;
+            } else {
+                currentQuestions = data.quiz_data;
+                currentQuizName = `AI: ${prompt}`;
+                fileNameSpan.textContent = currentQuizName;
+                startQuiz();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            aiGenerateBtn.textContent = "✨ Generate";
+            aiGenerateBtn.disabled = false;
+            errorMessage.textContent = "Failed to generate quiz.";
+        });
+    });
+
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             fileNameSpan.textContent = e.target.files[0].name;
@@ -158,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        // Simple loading state
         uploadBtn.textContent = "Loading...";
         uploadBtn.disabled = true;
 
@@ -221,12 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Clone questions to avoid mutating original data
         sessionQuestions = JSON.parse(JSON.stringify(currentQuestions));
 
-        // Apply Shuffle Questions Setting
         if (quizSettings.shuffleQuestions) {
-             // Fisher-Yates Shuffle
              for (let i = sessionQuestions.length - 1; i > 0; i--) {
                  const j = Math.floor(Math.random() * (i + 1));
                  [sessionQuestions[i], sessionQuestions[j]] = [sessionQuestions[j], sessionQuestions[i]];
@@ -242,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
         quizSection.classList.remove('hidden');
         questionContainer.classList.remove('hidden');
 
-        // Initialize UI stats
         totalQuestionsCount.textContent = sessionQuestions.length;
         currentScoreSpan.textContent = 0;
 
@@ -266,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timeLeftSpan.textContent = timeLeft;
 
             if (timeLeft <= 10) {
-                 timeLeftSpan.parentElement.style.color = "#dc2626"; // Red warning
+                 timeLeftSpan.parentElement.style.color = "#dc2626";
             } else {
                  timeLeftSpan.parentElement.style.color = "inherit";
             }
@@ -281,49 +331,51 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleTimeout() {
          const question = sessionQuestions[currentQuestionIndex];
 
-         const buttons = optionsContainer.querySelectorAll('.option-btn');
-         buttons.forEach(btn => btn.disabled = true);
-
-         feedbackText.textContent = "Time's Up!";
-         feedbackText.style.color = "#dc2626";
-         document.getElementById('feedback-icon').textContent = "⏰";
-         feedbackDiv.style.borderColor = "#ef4444";
-
-         explanationText.innerHTML = marked.parse(question.explanation);
-         feedbackDiv.classList.remove('hidden');
-         nextBtn.classList.remove('hidden');
-
-         if (currentQuestionIndex === sessionQuestions.length - 1) {
-             nextBtn.textContent = "Finish Quiz";
-         } else {
-             nextBtn.textContent = "Next Question ➝";
+         if (question.type === 'multiple_choice' || !question.type) {
+             const buttons = optionsContainer.querySelectorAll('.option-btn');
+             buttons.forEach(btn => btn.disabled = true);
+             buttons.forEach(btn => {
+                if (btn.dataset.optionValue === question.answer) btn.classList.add('correct');
+             });
+         } else if (question.type === 'open_ended') {
+             const input = optionsContainer.querySelector('textarea');
+             if(input) input.disabled = true;
+             const submitBtn = optionsContainer.querySelector('.check-answer-btn');
+             if(submitBtn) submitBtn.disabled = true;
+         } else if (question.type === 'matching') {
+              const items = optionsContainer.querySelectorAll('.match-item');
+              items.forEach(i => i.style.pointerEvents = 'none');
          }
 
-         // Highlight the correct answer
-         buttons.forEach(btn => {
-             // We use dataset.optionValue because buttons might be shuffled
-             if (btn.dataset.optionValue === question.answer) {
-                 btn.classList.add('correct');
-             }
-         });
-
-         feedbackDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-         hljs.highlightAll();
+         showFeedback(false, "Time's Up!", question.explanation, true);
     }
 
     function showQuestion() {
         updateProgress();
         const question = sessionQuestions[currentQuestionIndex];
 
-        // Parse markdown for question text
         questionText.innerHTML = marked.parse(question.question);
-
         optionsContainer.innerHTML = '';
+
         feedbackDiv.classList.add('hidden');
         nextBtn.classList.add('hidden');
         nextBtn.textContent = "Next Question ➝";
 
-        // Randomize options if setting is enabled
+        const qType = question.type || 'multiple_choice';
+
+        if (qType === 'multiple_choice') {
+            renderMultipleChoice(question);
+        } else if (qType === 'open_ended') {
+            renderOpenEnded(question);
+        } else if (qType === 'matching') {
+            renderMatching(question);
+        }
+
+        hljs.highlightAll();
+        startTimer();
+    }
+
+    function renderMultipleChoice(question) {
         let displayOptions = question.options.map((opt, index) => ({ opt, originalIndex: index }));
         if (quizSettings.shuffleOptions) {
             displayOptions = displayOptions.sort(() => Math.random() - 0.5);
@@ -333,64 +385,115 @@ document.addEventListener('DOMContentLoaded', () => {
             const option = item.opt;
             const btn = document.createElement('button');
             btn.dataset.optionValue = option;
-            // Parse markdown for options (incase they contain code or formatting)
             btn.innerHTML = marked.parseInline(option);
             btn.classList.add('option-btn');
-            btn.addEventListener('click', () => selectOption(option, question.answer, question.explanation));
+            btn.addEventListener('click', () => selectMultipleChoiceOption(option, question.answer, question.explanation));
             optionsContainer.appendChild(btn);
         });
-
-        // Apply syntax highlighting
-        hljs.highlightAll();
-
-        startTimer();
     }
 
-    function selectOption(selected, correct, explanation) {
-        clearInterval(timerInterval); // Stop timer
+    function renderOpenEnded(question) {
+        const container = document.createElement('div');
+        container.className = 'open-ended-container';
 
-        // Disable all buttons
+        const textarea = document.createElement('textarea');
+        textarea.className = 'open-ended-input';
+        textarea.placeholder = "Type your answer here...";
+
+        const submitBtn = document.createElement('button');
+        submitBtn.className = 'primary-btn check-answer-btn';
+        submitBtn.textContent = "Check Answer";
+
+        submitBtn.addEventListener('click', () => {
+            const userAns = textarea.value.trim();
+            if(!userAns) return;
+            checkOpenEnded(userAns, question.answer, question.explanation);
+        });
+
+        container.appendChild(textarea);
+        container.appendChild(submitBtn);
+        optionsContainer.appendChild(container);
+    }
+
+    function renderMatching(question) {
+        const container = document.createElement('div');
+        container.className = 'matching-container';
+
+        const leftCol = document.createElement('div');
+        leftCol.className = 'match-column';
+        const rightCol = document.createElement('div');
+        rightCol.className = 'match-column';
+
+        const pairs = question.pairs;
+        const keys = Object.keys(pairs);
+        const values = Object.values(pairs);
+
+        let displayValues = values.map((val, idx) => ({val, id: idx}));
+        displayValues.sort(() => Math.random() - 0.5);
+
+        let selectedLeft = null;
+        let matchedCount = 0;
+        const totalPairs = keys.length;
+
+        keys.forEach((key, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'match-item';
+            btn.textContent = key;
+            btn.dataset.key = key;
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('matched')) return;
+
+                leftCol.querySelectorAll('.match-item').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedLeft = key;
+            });
+            leftCol.appendChild(btn);
+        });
+
+        displayValues.forEach(obj => {
+            const btn = document.createElement('div');
+            btn.className = 'match-item';
+            btn.textContent = obj.val;
+            btn.dataset.val = obj.val;
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('matched')) return;
+                if (!selectedLeft) return;
+
+                const correctVal = pairs[selectedLeft];
+                if (obj.val === correctVal) {
+                    btn.classList.add('matched');
+                    const leftBtn = leftCol.querySelector(`.match-item[data-key="${selectedLeft}"]`);
+                    leftBtn.classList.add('matched');
+                    leftBtn.classList.remove('selected');
+                    selectedLeft = null;
+                    matchedCount++;
+
+                    if (matchedCount === totalPairs) {
+                        clearInterval(timerInterval);
+                        score++;
+                        currentScoreSpan.textContent = score;
+                        showFeedback(true, "All Matched!", question.explanation);
+                    }
+                } else {
+                    btn.style.borderColor = 'var(--error-color)';
+                    setTimeout(() => btn.style.borderColor = '', 500);
+                }
+            });
+            rightCol.appendChild(btn);
+        });
+
+        container.appendChild(leftCol);
+        container.appendChild(rightCol);
+        optionsContainer.appendChild(container);
+    }
+
+    function selectMultipleChoiceOption(selected, correct, explanation) {
+        clearInterval(timerInterval);
         const buttons = optionsContainer.querySelectorAll('.option-btn');
         buttons.forEach(btn => btn.disabled = true);
 
         const isCorrect = selected === correct;
 
-        const feedbackIcon = document.getElementById('feedback-icon');
-
-        if (isCorrect) {
-            score++;
-            feedbackText.textContent = "Correct Answer!";
-            feedbackText.style.color = "#059669"; // Green 600
-            feedbackIcon.textContent = "✅";
-            feedbackDiv.style.borderColor = "#10b981";
-        } else {
-            feedbackText.textContent = `Incorrect`;
-            feedbackText.style.color = "#dc2626"; // Red 600
-            feedbackIcon.textContent = "❌";
-            feedbackDiv.style.borderColor = "#ef4444";
-        }
-
-        currentScoreSpan.textContent = score; // Real-time score update
-
-        // Parse markdown for explanation
-        explanationText.innerHTML = marked.parse(explanation);
-        feedbackDiv.classList.remove('hidden');
-        nextBtn.classList.remove('hidden');
-
-        if (currentQuestionIndex === currentQuestions.length - 1) {
-             nextBtn.textContent = "Finish Quiz";
-        } else {
-             nextBtn.textContent = "Next Question ➝";
-        }
-
-        // Scroll to feedback
-        feedbackDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-        // Apply syntax highlighting to explanation
-        hljs.highlightAll();
-
-        // Highlight selected and correct answers
-        const question = sessionQuestions[currentQuestionIndex];
         buttons.forEach(btn => {
              const btnValue = btn.dataset.optionValue;
              if (btnValue === correct) {
@@ -400,6 +503,86 @@ document.addEventListener('DOMContentLoaded', () => {
                  btn.classList.add('incorrect');
              }
         });
+
+        if (isCorrect) {
+            score++;
+            currentScoreSpan.textContent = score;
+        }
+
+        showFeedback(isCorrect, isCorrect ? "Correct Answer!" : "Incorrect", explanation);
+    }
+
+    function checkOpenEnded(userAns, correctAns, explanation) {
+        clearInterval(timerInterval);
+
+        const isExactMatch = userAns.toLowerCase() === correctAns.toLowerCase();
+
+        optionsContainer.querySelector('textarea').disabled = true;
+        optionsContainer.querySelector('button').disabled = true;
+
+        if (isExactMatch) {
+            score++;
+            currentScoreSpan.textContent = score;
+            showFeedback(true, "Correct Answer!", explanation);
+        } else {
+            const combinedExplanation = `The expected answer was: **${correctAns}**\n\n${explanation}`;
+            showFeedback(false, "Not an exact match", combinedExplanation, false);
+
+            const selfCorrectDiv = document.createElement('div');
+            selfCorrectDiv.className = 'self-correct-wrapper';
+            selfCorrectDiv.innerHTML = `
+                <p>Did you mean this? Mark yourself:</p>
+                <div class="self-correct-actions">
+                    <button class="correct-btn">I was Correct</button>
+                    <button class="incorrect-btn">I was Wrong</button>
+                </div>
+            `;
+
+            const explanationDiv = document.querySelector('.explanation-content');
+            explanationDiv.appendChild(selfCorrectDiv);
+
+            selfCorrectDiv.querySelector('.correct-btn').addEventListener('click', () => {
+                score++;
+                currentScoreSpan.textContent = score;
+                feedbackText.textContent = "Correct (Self-Marked)!";
+                feedbackText.style.color = "#059669";
+                document.getElementById('feedback-icon').textContent = "✅";
+                feedbackDiv.style.borderColor = "#10b981";
+                selfCorrectDiv.remove();
+            });
+
+            selfCorrectDiv.querySelector('.incorrect-btn').addEventListener('click', () => {
+                feedbackText.textContent = "Incorrect (Self-Marked)";
+                 selfCorrectDiv.remove();
+            });
+        }
+    }
+
+    function showFeedback(isCorrect, title, explanation, isTimeout=false) {
+        if (isCorrect) {
+            feedbackText.textContent = title;
+            feedbackText.style.color = "#059669";
+            document.getElementById('feedback-icon').textContent = "✅";
+            feedbackDiv.style.borderColor = "#10b981";
+        } else {
+            feedbackText.textContent = title;
+            feedbackText.style.color = "#dc2626";
+            document.getElementById('feedback-icon').textContent = isTimeout ? "⏰" : "❌";
+            feedbackDiv.style.borderColor = "#ef4444";
+        }
+
+        explanationText.innerHTML = marked.parse(explanation);
+        feedbackDiv.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+
+        if (currentQuestionIndex === sessionQuestions.length - 1) {
+             nextBtn.textContent = "Finish Quiz";
+        } else {
+             nextBtn.textContent = "Next Question ➝";
+        }
+
+        feedbackDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        hljs.highlightAll();
     }
 
     nextBtn.addEventListener('click', () => {
@@ -413,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showResults() {
         questionContainer.classList.add('hidden');
-        quizSection.classList.add('hidden'); // Hide the entire quiz section including stats
+        quizSection.classList.add('hidden');
         resultsSection.classList.remove('hidden');
 
         scoreSpan.textContent = score;
@@ -439,27 +622,19 @@ document.addEventListener('DOMContentLoaded', () => {
             percentage: Math.round(percentage),
             fileName: currentQuizName
         };
-
-        // Add to beginning
         history.unshift(newEntry);
-
-        // Keep only last 20
         if (history.length > 20) history.pop();
-
         localStorage.setItem('devQuizHistory', JSON.stringify(history));
     }
 
     function renderHistory() {
         const historyList = document.getElementById('history-list');
         const history = JSON.parse(localStorage.getItem('devQuizHistory') || '[]');
-
         historyList.innerHTML = '';
-
         if (history.length === 0) {
             historyList.innerHTML = '<p class="empty-state">No quizzes taken yet.</p>';
             return;
         }
-
         history.forEach(entry => {
             const item = document.createElement('div');
             item.className = 'history-item';
@@ -492,35 +667,27 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuizName = "Unknown Quiz";
     });
 
-    // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-        // Handle global shortcuts or specific states
-
-        // Results Page: Enter to Restart
         if (!resultsSection.classList.contains('hidden')) {
-            if (e.key === 'Enter') {
-                restartBtn.click();
-            }
+            if (e.key === 'Enter') restartBtn.click();
             return;
         }
 
-        // Quiz Active
         if (!quizSection.classList.contains('hidden') && !questionContainer.classList.contains('hidden')) {
-            // If Feedback is visible, Enter -> Next
             if (!feedbackDiv.classList.contains('hidden')) {
-                if (e.key === 'Enter') {
-                    nextBtn.click();
-                }
+                if (e.key === 'Enter') nextBtn.click();
                 return;
             }
 
-            // If Feedback is NOT visible, Numbers -> Select Option
-            const key = e.key;
-            if (['1', '2', '3', '4'].includes(key)) {
-                const index = parseInt(key) - 1;
-                const buttons = optionsContainer.querySelectorAll('.option-btn');
-                if (buttons[index] && !buttons[index].disabled) {
-                    buttons[index].click();
+            const question = sessionQuestions[currentQuestionIndex];
+            if (!question.type || question.type === 'multiple_choice') {
+                const key = e.key;
+                if (['1', '2', '3', '4'].includes(key)) {
+                    const index = parseInt(key) - 1;
+                    const buttons = optionsContainer.querySelectorAll('.option-btn');
+                    if (buttons[index] && !buttons[index].disabled) {
+                        buttons[index].click();
+                    }
                 }
             }
         }
