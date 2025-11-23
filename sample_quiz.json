@@ -1,23 +1,40 @@
 [
   {
-    "id": 1,
-    "question": "What is the capital of France?",
-    "options": ["London", "Berlin", "Paris", "Madrid"],
-    "answer": "Paris",
-    "explanation": "Paris is the capital and most populous city of France."
+    "type": "multiple_choice",
+    "question": "What is the output of `print(type([]))` in Python?",
+    "options": ["<class 'list'>", "<class 'dict'>", "<class 'tuple'>", "<class 'set'>"],
+    "answer": "<class 'list'>",
+    "explanation": "Square brackets `[]` denote a list in Python."
   },
   {
-    "id": 2,
-    "question": "What is the output of the following Python code?\n\n```python\nprint(2 + 2)\n```",
-    "options": ["3", "4", "22", "Error"],
-    "answer": "4",
-    "explanation": "The code `print(2 + 2)` calculates the sum of 2 and 2, which is 4."
+    "type": "multiple_choice",
+    "question": "Which of the following is NOT a valid Python variable name?",
+    "options": ["my_var", "2var", "_var", "var2"],
+    "answer": "2var",
+    "explanation": "Variable names cannot start with a digit."
   },
   {
-    "id": 3,
-    "question": "Which function is used to define a function in Python?",
+    "type": "open_ended",
+    "question": "Explain the difference between a list and a tuple in Python.",
+    "answer": "Lists are mutable (can be changed), while tuples are immutable (cannot be changed after creation). Lists use brackets `[]`, tuples use parentheses `()`.",
+    "explanation": "Mutability is the key difference."
+  },
+  {
+    "type": "matching",
+    "question": "Match the Python data types to their examples.",
+    "pairs": {
+        "Integer": "42",
+        "String": "'Hello'",
+        "Boolean": "True",
+        "Float": "3.14"
+    },
+    "explanation": "Integers are whole numbers, strings are text, booleans are True/False, floats are decimals."
+  },
+  {
+    "type": "multiple_choice",
+    "question": "What keyword is used to define a function in Python?",
     "options": ["func", "def", "function", "define"],
     "answer": "def",
-    "explanation": "The `def` keyword is used to define functions in Python. Example:\n```python\ndef my_func():\n    pass\n```"
+    "explanation": "The `def` keyword introduces a function definition."
   }
 ]

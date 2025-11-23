@@ -85,7 +85,11 @@ def generate_quiz():
 
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+
+        # Try multiple models in case of region/account restrictions
+        candidate_models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro', 'gemini-1.0-pro']
+        model = None
+        last_exception = None
 
         system_prompt = """
         You are a quiz generator. Generate a quiz based on the user's prompt.
@@ -107,7 +111,36 @@ def generate_quiz():
         Generate 5 varied questions (mix of types if appropriate, but mostly what fits the prompt).
         """
 
-        response = model.generate_content(f"{system_prompt}\n\nUser Prompt: {prompt_text}")
+        response = None
+
+        for model_name in candidate_models:
+            try:
+                print(f"Attempting model: {model_name}")
+                m = genai.GenerativeModel(model_name)
+                response = m.generate_content(f"{system_prompt}\n\nUser Prompt: {prompt_text}")
+                print(f"Success with {model_name}")
+                break
+            except Exception as e:
+                print(f"Failed with {model_name}: {e}")
+                last_exception = e
+                # Check for fatal errors that shouldn't trigger retries (like auth failure vs 404)
+                # However, 404 is specifically what we are trying to dodge.
+                # Auth errors might also appear if a key doesn't have access to a specific model.
+                continue
+
+        if not response:
+            # All attempts failed. Try to list available models to help the user.
+            available_models = []
+            try:
+                for m in genai.list_models():
+                    if 'generateContent' in m.supported_generation_methods:
+                        available_models.append(m.name)
+            except Exception as list_err:
+                available_models = [f"Could not list models: {list_err}"]
+
+            error_msg = f"Failed to generate content. Last error: {str(last_exception)}. Available models for this key: {available_models}"
+            return jsonify({'error': error_msg}), 500
+
         text = response.text
 
         # Clean up potential markdown code blocks
